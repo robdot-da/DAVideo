@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Optimizer — check & shrink your videos</title>
+  <title>Video Optimizer — shrink & fix your videos</title>
   <meta name="description"
-    content="Client-side video checker and compressor. Spot videos that won't play in Safari and shrink any video for faster page loads.">
+    content="Client-side video compressor. Shrink any video for faster page loads. Nothing is uploaded — it all happens in your browser.">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -167,13 +167,6 @@
       background: rgba(242, 124, 110, .08);
     }
 
-    .badge-note {
-      font-size: 12px;
-      color: var(--text-dim);
-      line-height: 1.55;
-      margin: -6px 0 18px;
-    }
-
     .file-list {
       display: flex;
       flex-direction: column;
@@ -224,11 +217,12 @@
       font-weight: 600;
     }
 
-    details.tech {
+    /* Advanced section */
+    details.advanced {
       margin-bottom: 20px;
     }
 
-    details.tech summary {
+    details.advanced summary {
       cursor: pointer;
       font-size: 12px;
       color: var(--text-dim);
@@ -236,24 +230,30 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      padding: 8px 0;
+      user-select: none;
     }
 
-    details.tech summary::-webkit-details-marker {
+    details.advanced summary::-webkit-details-marker {
       display: none;
     }
 
-    details.tech summary::before {
+    details.advanced summary::before {
       content: '▸';
       font-size: 10px;
       transition: transform .15s ease;
     }
 
-    details.tech[open] summary::before {
+    details.advanced[open] summary::before {
       transform: rotate(90deg);
     }
 
+    .advanced-body {
+      margin-top: 12px;
+    }
+
     .tech-body {
-      margin-top: 10px;
+      margin-bottom: 16px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1px;
@@ -596,27 +596,6 @@
       margin-top: 22px;
       line-height: 1.6;
     }
-
-    .engine-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text-dim);
-      margin-top: 8px;
-    }
-
-    .engine-status .dot2 {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-dim);
-    }
-
-    .engine-status.fast .dot2 {
-      background: var(--green);
-    }
   </style>
 </head>
 
@@ -626,8 +605,7 @@
     <header>
       <div class="header-badge"><span class="dot"></span>Runs in your browser</div>
       <h1>Video Optimizer</h1>
-      <p class="subtitle">Drop a video to check if it'll play everywhere, and shrink it for faster page loads. Nothing
-        is uploaded — it all happens on your computer.</p>
+      <p class="subtitle">Drop a video to shrink it and make it play everywhere. Nothing is uploaded.</p>
     </header>
 
     <div class="card">
@@ -642,17 +620,15 @@
           </svg>
         </div>
         <div class="dropzone-title">Drop your video here, or <span>browse</span></div>
-        <div class="dropzone-hint">MP4, MOV, WebM, MKV — works best under 100MB</div>
+        <div class="dropzone-hint">MP4, MOV, WebM, MKV — works best under 100 MB</div>
       </div>
     </div>
 
     <div class="card" id="inspectorCard" style="display:none;">
       <div class="section-title">
-        <span>Selected video</span>
+        <span>Your video</span>
         <span id="statusBadge" class="badge badge-ok">Checking…</span>
       </div>
-      <p class="badge-note">H.264 is the format that plays everywhere — every browser, app, and device. Safari is just
-        the strictest about it, so if a video works here, it'll work anywhere.</p>
 
       <div class="file-list" id="fileQueue" style="display:none;"></div>
 
@@ -661,85 +637,96 @@
         <div class="m">Length <b id="specDur">—</b></div>
       </div>
 
-      <details class="tech">
-        <summary>Technical details</summary>
-        <div class="tech-body">
-          <div class="tech-cell">
-            <div class="tech-k">Video codec</div>
-            <div class="tech-v" id="specVCodec">—</div>
+      <div class="section-title" style="font-size:13px;">What do you need?</div>
+      <div class="presets-group">
+        <button class="preset-btn active" data-preset="standard">Web ready</button>
+        <button class="preset-btn" data-preset="max-compress">Small file</button>
+        <button class="preset-btn" data-preset="bg-muted">Background video</button>
+      </div>
+
+      <details class="advanced">
+        <summary>Advanced settings</summary>
+        <div class="advanced-body">
+
+          <div class="tech-body">
+            <div class="tech-cell">
+              <div class="tech-k">Video codec</div>
+              <div class="tech-v" id="specVCodec">—</div>
+            </div>
+            <div class="tech-cell">
+              <div class="tech-k">Resolution</div>
+              <div class="tech-v" id="specRes">—</div>
+            </div>
+            <div class="tech-cell">
+              <div class="tech-k">Audio codec</div>
+              <div class="tech-v" id="specACodec">—</div>
+            </div>
+            <div class="tech-cell">
+              <div class="tech-k">Engine</div>
+              <div class="tech-v" id="specEngine">—</div>
+            </div>
           </div>
-          <div class="tech-cell">
-            <div class="tech-k">Resolution</div>
-            <div class="tech-v" id="specRes">—</div>
+
+          <div class="options-grid">
+            <div class="option-card">
+              <div class="option-title">Max size</div>
+              <div class="option-desc">Shrinks the video if it's larger than this.</div>
+              <select id="optRes">
+                <option value="0">Keep original</option>
+                <option value="1920" selected>Large (1920px)</option>
+                <option value="1280">Medium (1280px)</option>
+                <option value="960">Small (960px)</option>
+                <option value="640">Extra small (640px)</option>
+              </select>
+            </div>
+
+            <div class="option-card">
+              <div class="option-title">Quality</div>
+              <div class="option-desc" id="crfHint">Balanced — good quality, reasonable size</div>
+              <input type="range" id="optCrf" min="18" max="32" value="23" step="1">
+              <div class="quality-labels"><span>Sharper / bigger</span><span>Smaller / lower quality</span></div>
+            </div>
+
+            <div class="option-card">
+              <div class="option-title">Audio</div>
+              <select id="optAudio">
+                <option value="aac-128" selected>Keep audio (standard)</option>
+                <option value="aac-192">Keep audio (high quality)</option>
+                <option value="copy">Keep audio (original, untouched)</option>
+                <option value="mute">Remove audio</option>
+              </select>
+            </div>
+
+            <div class="option-card">
+              <div class="toggle-row">
+                <div>
+                  <div class="option-title">Instant playback</div>
+                  <div class="option-desc" style="margin-bottom:0;">Lets the video start playing right away.</div>
+                </div>
+                <div class="toggle on" id="optFastStart"></div>
+              </div>
+            </div>
           </div>
-          <div class="tech-cell">
-            <div class="tech-k">Audio codec</div>
-            <div class="tech-v" id="specACodec">—</div>
+
+          <div class="log-drawer">
+            <button class="log-toggle" id="logToggleBtn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Debug output</span>
+            </button>
+            <div class="log-box" id="logBox"></div>
           </div>
-          <div class="tech-cell">
-            <div class="tech-k">Engine</div>
-            <div class="tech-v" id="specEngine">—</div>
-          </div>
+
         </div>
       </details>
-
-      <div class="section-title" style="font-size:13px;">Presets</div>
-      <div class="presets-group">
-        <button class="preset-btn active" data-preset="standard">Standard (works everywhere)</button>
-        <button class="preset-btn" data-preset="bg-muted">Homepage background (muted)</button>
-        <button class="preset-btn" data-preset="max-compress">Extra small</button>
-        <button class="preset-btn" data-preset="custom">Custom</button>
-      </div>
-
-      <div class="options-grid">
-        <div class="option-card">
-          <div class="option-title">Max size</div>
-          <div class="option-desc">Shrinks the video if it's larger than this — smaller means faster page loads.</div>
-          <select id="optRes">
-            <option value="0">Keep original</option>
-            <option value="1920" selected>Large (1920px)</option>
-            <option value="1280">Medium (1280px)</option>
-            <option value="960">Small (960px)</option>
-            <option value="640">Extra small (640px)</option>
-          </select>
-        </div>
-
-        <div class="option-card">
-          <div class="option-title">Quality</div>
-          <div class="option-desc" id="crfHint">Balanced — good quality, reasonable size</div>
-          <input type="range" id="optCrf" min="18" max="32" value="23" step="1">
-          <div class="quality-labels"><span>Sharper / bigger</span><span>Smaller / lower quality</span></div>
-        </div>
-
-        <div class="option-card">
-          <div class="option-title">Audio</div>
-          <div class="option-desc">Most background videos don't need sound — removing it also shrinks the file.</div>
-          <select id="optAudio">
-            <option value="aac-128" selected>Keep audio (standard)</option>
-            <option value="aac-192">Keep audio (high quality)</option>
-            <option value="copy">Keep audio (original, untouched)</option>
-            <option value="mute">Remove audio</option>
-          </select>
-        </div>
-
-        <div class="option-card">
-          <div class="toggle-row">
-            <div>
-              <div class="option-title">Instant playback</div>
-              <div class="option-desc" style="margin-bottom:0;">Lets the video start playing right away instead of
-                buffering. Leave this on.</div>
-            </div>
-            <div class="toggle on" id="optFastStart"></div>
-          </div>
-        </div>
-      </div>
 
       <button class="btn-primary" id="convertBtn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <polygon points="5 3 19 12 5 21 5 3"></polygon>
         </svg>
-        <span>Optimize Video</span>
+        <span>Optimize</span>
       </button>
 
       <div class="progress-box" id="progressBox" style="display:none;">
@@ -748,16 +735,6 @@
         <div class="progress-bar">
           <div class="progress-fill" id="progressFill"></div>
         </div>
-      </div>
-
-      <div class="log-drawer">
-        <button class="log-toggle" id="logToggleBtn">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-          <span>View debug output</span>
-        </button>
-        <div class="log-box" id="logBox"></div>
       </div>
     </div>
 
@@ -802,14 +779,13 @@
     </div>
 
     <footer>
-      Nothing leaves your computer — all processing happens locally in your browser.
-      <br>The first video takes a bit longer while the engine loads (~30MB), then it's cached.
+      Everything runs locally in your browser — nothing is uploaded.
     </footer>
 
   </div>
 
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
-  <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+  <script src="./ffmpeg/ffmpeg.js"></script>
+  <script src="./ffmpeg/ffmpeg-util.js"></script>
   <script>
     (function () {
       'use strict';
@@ -941,17 +917,14 @@
         if (ffmpegInstance) return ffmpegInstance;
 
         if (!window.FFmpegWASM || !window.FFmpegUtil) {
-          throw new Error('FFmpeg failed to load from CDN. Check your internet connection and try again.');
+          throw new Error('FFmpeg failed to load. Please refresh the page and try again.');
         }
 
         const { FFmpeg } = window.FFmpegWASM;
         const { toBlobURL } = window.FFmpegUtil;
 
-        const base = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-        // ffmpeg.js itself is loaded from a different origin (unpkg), so it can't spawn its
-        // own internal worker directly — we have to fetch that chunk and hand it over as a
-        // same-origin blob URL, or the browser blocks it with a cross-origin Worker error.
-        const FFMPEG_JS_BASE = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd';
+        // Self-hosted FFmpeg files — no CDN dependency
+        const base = './ffmpeg';
 
         appendLog('[System] Loading FFmpeg engine...');
 
@@ -960,7 +933,7 @@
 
         const coreURL = await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript');
         const wasmURL = await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm');
-        const classWorkerURL = await toBlobURL(`${FFMPEG_JS_BASE}/814.ffmpeg.js`, 'text/javascript');
+        const classWorkerURL = await toBlobURL(`${base}/814.ffmpeg.js`, 'text/javascript');
 
         // The FFmpeg library creates workers with {type:"module"} when classWorkerURL
         // is provided, but the worker code uses importScripts() which only works in
@@ -1031,25 +1004,25 @@
 
           if (isH264) {
             statusBadge.className = 'badge badge-ok';
-            statusBadge.textContent = '✅ Plays everywhere';
-            convertBtn.querySelector('span').textContent = 'Compress this video';
+            statusBadge.textContent = '✅ Ready';
+            convertBtn.querySelector('span').textContent = 'Compress';
           } else if (isHevc) {
             statusBadge.className = 'badge badge-danger';
-            statusBadge.textContent = "⚠️ Won't play in Safari";
+            statusBadge.textContent = '⚠️ Needs fixing';
             convertBtn.querySelector('span').textContent = 'Fix & compress';
           } else {
             statusBadge.className = 'badge badge-warn';
-            statusBadge.textContent = '⚠️ May not play everywhere';
+            statusBadge.textContent = '⚠️ Needs fixing';
             convertBtn.querySelector('span').textContent = 'Fix & compress';
           }
           convertBtn.disabled = false;
         } catch (err) {
           console.error(err);
           statusBadge.className = 'badge badge-warn';
-          statusBadge.textContent = "Couldn't check this file";
+          statusBadge.textContent = "Couldn't check";
           specVCodec.textContent = '—';
           convertBtn.disabled = false;
-          convertBtn.querySelector('span').textContent = 'Try optimizing anyway';
+          convertBtn.querySelector('span').textContent = 'Optimize anyway';
         }
       }
 
@@ -1114,7 +1087,7 @@
 
       [optRes, optCrf, optAudio].forEach(input => {
         input.addEventListener('change', () => {
-          presetBtns.forEach(b => b.classList.toggle('active', b.dataset.preset === 'custom'));
+          presetBtns.forEach(b => b.classList.remove('active'));
         });
       });
 
@@ -1205,7 +1178,7 @@
           convertBtn.querySelector('span').textContent = 'Optimize again';
         } catch (err) {
           console.error(err);
-          progressStage.textContent = 'Something went wrong — check debug output below';
+          progressStage.textContent = 'Something went wrong — open Advanced settings for details';
           appendLog('[ERROR] ' + (err.message || err));
           convertBtn.disabled = false;
           convertBtn.querySelector('span').textContent = 'Retry';
