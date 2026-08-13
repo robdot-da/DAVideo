@@ -960,8 +960,22 @@
 
         const coreURL = await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript');
         const wasmURL = await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm');
+        const classWorkerURL = await toBlobURL(`${FFMPEG_JS_BASE}/814.ffmpeg.js`, 'text/javascript');
 
-        await ffmpegInstance.load({ coreURL, wasmURL });
+        // The FFmpeg library creates workers with {type:"module"} when classWorkerURL
+        // is provided, but the worker code uses importScripts() which only works in
+        // classic workers. Temporarily override Worker to force classic type.
+        const _Worker = window.Worker;
+        window.Worker = function (scriptURL, options) {
+          return new _Worker(scriptURL, { ...options, type: undefined });
+        };
+        window.Worker.prototype = _Worker.prototype;
+
+        try {
+          await ffmpegInstance.load({ coreURL, wasmURL, classWorkerURL });
+        } finally {
+          window.Worker = _Worker;
+        }
 
         appendLog('[System] Engine ready.');
         specEngine.textContent = 'Ready';
