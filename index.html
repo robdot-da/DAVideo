@@ -960,9 +960,8 @@
 
         const coreURL = await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript');
         const wasmURL = await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm');
-        const classWorkerURL = await toBlobURL(`${FFMPEG_JS_BASE}/814.ffmpeg.js`, 'text/javascript');
 
-        await ffmpegInstance.load({ coreURL, wasmURL, classWorkerURL });
+        await ffmpegInstance.load({ coreURL, wasmURL });
 
         appendLog('[System] Engine ready.');
         specEngine.textContent = 'Ready';
